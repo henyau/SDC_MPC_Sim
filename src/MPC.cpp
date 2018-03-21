@@ -7,8 +7,8 @@
 using CppAD::AD;
 
 // et the timestep length and duration
-size_t N = 20;
-double dt = 0.05;
+size_t N = 10;
+double dt = 0.1;
 
 // This value assumes the model presented in the classroom is used.
 //
@@ -47,17 +47,17 @@ class FG_eval {
     // the Solver function below
 
     fg[0] = 0.0;    //cost functional
-    double ref_v = 30;
+    double ref_v = 80*.44704; //ref velocity in m/s
     for(size_t i = 0; i< N; i++)
     {
-    	fg[0] += 15.0*CppAD::pow(vars[cte_start+i],2);
+    	fg[0] += 2.0*CppAD::pow(vars[cte_start+i],2);
 	fg[0] += 5.0*CppAD::pow(vars[epsi_start+i],2);
-	fg[0] += CppAD::pow(vars[v_start+i]-ref_v,2);
+	fg[0] += 5.0*CppAD::pow(vars[v_start+i]-ref_v,2);
     }
 
     // Minimize the use of actuators.
     for (size_t t = 0; t < N - 1; t++) {
-      fg[0] += 100*CppAD::pow(vars[delta_start + t], 2);
+      fg[0] += 1500*CppAD::pow(vars[delta_start + t], 2);
       fg[0] += 20*CppAD::pow(vars[a_start + t], 2);
     }
 
@@ -240,8 +240,10 @@ vector<double> MPC::Solve(Eigen::VectorXd state, Eigen::VectorXd coeffs) {
   // {...} is shorthand for creating a vector, so auto x1 = {1.0,2.0}
   // creates a 2 element double vector.
   vector<double> res;
-  res.push_back(solution.x[delta_start+1]/(25*M_PI/180));
-  res.push_back(solution.x[a_start+1]);
+  res.push_back(solution.x[delta_start]/(25*M_PI/180));
+  res.push_back(solution.x[a_start]);
+ //  res.push_back(solution.x[delta_start+1]/(25*M_PI/180));
+ // res.push_back(solution.x[a_start+1]);
  
   for(size_t i = 0; i< N-1; i++)
   {

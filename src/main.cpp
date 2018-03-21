@@ -89,7 +89,10 @@ int main() {
           double px = j[1]["x"];
           double py = j[1]["y"];
           double psi = j[1]["psi"];
-          double v = j[1]["speed"];
+          double v = j[1]["speed"];//in MPH
+	  double delta = j[1]["steering_angle"];//returned angle in radians
+	  delta *= -1.0;
+	  double a = j[1]["throttle"];// this doubles as the acceleration 
 
           /*
           * Calculate steering angle and throttle using MPC.
@@ -118,13 +121,28 @@ int main() {
 	  
 
 	  auto poly_coeff = polyfit(xvrot, yvrot, 2);
-	  double cte = polyeval(poly_coeff,xvrot[0])-yvrot[0];//polyeval(poly_coeff, px)-py;
-	  double psie = psi-atan(2*poly_coeff[2]*xvrot[0]+poly_coeff[1]);//do derivative to get slope. atan of slope is angle
+//	  double cte = polyeval(poly_coeff,xvrot[0])-yvrot[0];//polyeval(poly_coeff, px)-py;
+	 // double psie = psi-atan(2*poly_coeff[2]*xvrot[0]+poly_coeff[1]);//do derivative to get slope. atan of slope is angle
+	  double cte = polyeval(poly_coeff,0);
+	  double psie = -atan(poly_coeff[1]);
 
 	  Eigen::VectorXd state(6);
-//	  state<<px,py,psi,v,cte,psie;
 
-	  state<<0,0,0,v,cte,psie;//car relative pos?
+	  double t_lat = 0.1;//latency in seconds
+	  v *= 0.44704; //mph to m/s
+	  //dead reckoning, move foward 100ms
+	  double Lf = 2.67;
+	  psi =  v*delta*t_lat/Lf;
+          px = v*cos(psi)*t_lat;
+	  py = v*sin(psi)*t_lat;
+
+	  cte += py;
+	  psie += psi;//v*delta*t_lat/Lf;			
+	  v += a*t_lat;
+	
+	  state<<px,py,psi,v,cte,psie;
+
+//	  state<<0,0,0,v,cte,psie;//car relative pos?
 
 	  auto vars = mpc.Solve(state, poly_coeff);
 //	  state<< vars[0],vars[1],vars[2],vars[3],vars[4],vars[5];

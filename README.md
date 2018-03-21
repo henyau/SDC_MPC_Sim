@@ -1,10 +1,8 @@
 # **Model Predictive Control in Vehicle Sim** 
 
 ## Henry Yau
-## March 19, 2018
+## March 21, 2018
 
-
----
 
 **MPC Project**
 
@@ -63,5 +61,7 @@ where $N$ is the prediction horizon, $M$ is the control horizon, $t_d$ is the ma
 
 A design speed of 50mph equates to around 22m/s.  20 meters appears to give enough of the path to return to the center as well as describe the curvature of an upcoming turn in the road.  Therefore at a minimum, the horizon needs to be at least one second long when traveling at full speed. Too long of a horizon would mean that the quadratic polynomial would not fit well and too short of a horizon does not provide enough foresight to account for turns.
 
-The controller sample time $\Delta t$ should be less than the time delay $t_d = 100$ms, but should not be too small otherwise the inequality above will not be satisfied. $\Delta t=50$ms seems reasonable which requires $N=20$ to get the prediction horizon length of 1s. The control horizon $M$ then is then 2 as we are not applying the controls for the current time, but rather a control 100ms in the future. To do this we take the computed predicted future control action 1 additional step in the future and apply it to the system. 
+The controller sample time $\Delta t$ should be less than the time delay $t_d = 100$ms, but should not be too small otherwise the inequality above will not be satisfied. $\Delta t=100$ms seems reasonable which requires $N=10$ to get the prediction horizon length of 1s.
 
+One method to account for the time delay is to use dead reckoning. Using the kinematic equations, we propagate the system states 100ms in the future and use those states as the starting point for the MPC solver. The solution to the MPC problem then gives the appropriate controls that can be applied 100ms in the future.
+ 
